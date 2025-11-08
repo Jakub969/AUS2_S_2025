@@ -166,4 +166,8 @@ public class Block<T extends IRecord<T>> implements IByteOperation<T> {
     public int getValidCount() {
         return validCount;
     }
+
+    public int getBlockFactor() {
+        return blockFactor;
+    }
 }
