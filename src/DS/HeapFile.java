@@ -121,7 +121,7 @@ public class HeapFile<T extends IRecord<T>> {
         }
     }
 
-    private Block<T> getBlock(int blockIndex) {
+    public Block<T> getBlock(int blockIndex) {
         Block<T> block = new Block<>(this.recordClass, this.blockSize);
         try (RandomAccessFile raf = new RandomAccessFile(this.file, "r")) {
             raf.seek((long) blockIndex * blockSize);
@@ -146,4 +146,7 @@ public class HeapFile<T extends IRecord<T>> {
         return null;
     }
 
+    public Class<T> getRecordClass() {
+        return recordClass;
+    }
 }
