@@ -2,6 +2,7 @@ package Tester;
 
 import Interface.IRecord;
 
+import java.io.*;
 import java.util.Date;
 
 public class Osoba implements IRecord<Osoba> {
@@ -54,16 +55,79 @@ public class Osoba implements IRecord<Osoba> {
 
     @Override
     public Osoba fromByteArray(byte[] bytesArray) {
-        return null;
+        try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(bytesArray))) {
+
+            char[] meno = new char[15];
+            for (int i = 0; i < 15; i++) {
+                meno[i] = in.readChar();
+            }
+
+            char[] priezvisko = new char[14];
+            for (int i = 0; i < 14; i++) {
+                priezvisko[i] = in.readChar();
+            }
+
+            long dateLong = in.readLong();
+            Date datum = new Date(dateLong);
+
+            char[] uuid = new char[10];
+            for (int i = 0; i < 10; i++) {
+                uuid[i] = in.readChar();
+            }
+
+            this.meno = meno;
+            this.priezvisko = priezvisko;
+            this.datumNarodenia = datum;
+            this.UUID = uuid;
+            return this;
+
+        } catch (IOException e) {
+            throw new RuntimeException("Error deserializing Osoba", e);
+        }
     }
 
     @Override
     public byte[] toByteArray() {
-        return new byte[0];
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             DataOutputStream out = new DataOutputStream(baos)) {
+
+            // Write meno
+            for (int i = 0; i < 15; i++) {
+                char c = (i < meno.length) ? meno[i] : 0;
+                out.writeChar(c);
+            }
+
+            // Write priezvisko
+            for (int i = 0; i < 14; i++) {
+                char c = (i < priezvisko.length) ? priezvisko[i] : 0;
+                out.writeChar(c);
+            }
+
+            // Write date (as long)
+            out.writeLong(datumNarodenia.getTime());
+
+            // Write UUID
+            for (int i = 0; i < 10; i++) {
+                char c = (i < UUID.length) ? UUID[i] : 0;
+                out.writeChar(c);
+            }
+
+            return baos.toByteArray();
+
+        } catch (IOException e) {
+            throw new RuntimeException("Error serializing Osoba", e);
+        }
     }
 
     @Override
     public int getSize() {
         return Character.BYTES * 15 + Character.BYTES * 14 + Long.BYTES + Character.BYTES * 10;
+    }
+
+    @Override
+    public String toString() {
+        return new String(meno).trim() + " " +
+                new String(priezvisko).trim() + " [" +
+                new String(UUID).trim() + "]";
     }
 }
