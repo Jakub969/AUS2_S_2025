@@ -6,79 +6,74 @@ import java.io.*;
 import java.util.Date;
 
 public class Osoba implements IRecord<Osoba> {
-    private char[] meno;
-    private char[] priezvisko;
+    private String meno;
+    private final int MAX_MENO_LENGTH = 15;
+    private String priezvisko;
+    private final int MAX_PRIEZVISKO_LENGTH = 14;
     private Date datumNarodenia;
-    private char[] UUID;
+    private String UUID;
+    private final int UUID_LENGTH = 10;
 
     public Osoba() {
-        this.meno = new char[15];
-        this.priezvisko = new char[14];
-        this.datumNarodenia = new Date();
-        this.UUID = new char[10];
+        this.meno = "";
+        this.priezvisko = "";
+        this.datumNarodenia = new Date(0);
+        this.UUID = "";
     }
 
-    public Osoba(char[] meno, char[] priezvisko, Date datumNarodenia, char[] UUID) {
+    public Osoba(String meno, String priezvisko, Date datumNarodenia, String UUID) {
         this.meno = meno;
         this.priezvisko = priezvisko;
         this.datumNarodenia = datumNarodenia;
         this.UUID = UUID;
     }
 
-    public char[] getMeno() {
-        return meno;
+    public String getMeno() {
+        return this.meno;
     }
 
-    public char[] getPriezvisko() {
-        return priezvisko;
+    public String getPriezvisko() {
+        return this.priezvisko;
     }
 
     public Date getDatumNarodenia() {
-        return datumNarodenia;
+        return this.datumNarodenia;
     }
 
-    public char[] getUUID() {
-        return UUID;
+    public String getUUID() {
+        return this.UUID;
     }
 
     @Override
     public boolean isEqual(Osoba object) {
-        String uuidThis = new String(this.UUID);
-        String uuidOther = new String(object.getUUID());
-        return uuidThis.compareTo(uuidOther) == 0;
+        return this.UUID.equals(object.UUID);
     }
 
     @Override
     public Osoba createCopy() {
-        return new Osoba(this.meno.clone(), this.priezvisko.clone(), new Date(this.datumNarodenia.getTime()), this.UUID.clone());
+        return new Osoba(this.meno, this.priezvisko, new Date(this.datumNarodenia.getTime()), this.UUID);
     }
 
     @Override
     public Osoba fromByteArray(byte[] bytesArray) {
         try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(bytesArray))) {
+            int menoLen = in.readInt();
+            String meno = this.readFixedString(in, this.MAX_MENO_LENGTH).substring(0, menoLen);
 
-            char[] meno = new char[15];
-            for (int i = 0; i < 15; i++) {
-                meno[i] = in.readChar();
-            }
-
-            char[] priezvisko = new char[14];
-            for (int i = 0; i < 14; i++) {
-                priezvisko[i] = in.readChar();
-            }
+            int priezLen = in.readInt();
+            String priezvisko = this.readFixedString(in, this.MAX_PRIEZVISKO_LENGTH).substring(0, priezLen);
 
             long dateLong = in.readLong();
             Date datum = new Date(dateLong);
 
-            char[] uuid = new char[10];
-            for (int i = 0; i < 10; i++) {
-                uuid[i] = in.readChar();
-            }
+            int uuidLen = in.readInt();
+            String uuid = this.readFixedString(in, this.UUID_LENGTH).substring(0, uuidLen);
 
             this.meno = meno;
             this.priezvisko = priezvisko;
             this.datumNarodenia = datum;
             this.UUID = uuid;
+
             return this;
 
         } catch (IOException e) {
@@ -90,27 +85,20 @@ public class Osoba implements IRecord<Osoba> {
     public byte[] toByteArray() {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              DataOutputStream out = new DataOutputStream(baos)) {
+            // Meno
+            out.writeInt(Math.min(this.meno.length(), this.MAX_MENO_LENGTH));
+            this.writeFixedString(out, this.meno, this.MAX_MENO_LENGTH);
 
-            // Write meno
-            for (int i = 0; i < 15; i++) {
-                char c = (i < meno.length) ? meno[i] : 0;
-                out.writeChar(c);
-            }
+            // Priezvisko
+            out.writeInt(Math.min(this.priezvisko.length(), this.MAX_PRIEZVISKO_LENGTH));
+            this.writeFixedString(out, this.priezvisko, this.MAX_PRIEZVISKO_LENGTH);
 
-            // Write priezvisko
-            for (int i = 0; i < 14; i++) {
-                char c = (i < priezvisko.length) ? priezvisko[i] : 0;
-                out.writeChar(c);
-            }
+            // Date
+            out.writeLong(this.datumNarodenia.getTime());
 
-            // Write date (as long)
-            out.writeLong(datumNarodenia.getTime());
-
-            // Write UUID
-            for (int i = 0; i < 10; i++) {
-                char c = (i < UUID.length) ? UUID[i] : 0;
-                out.writeChar(c);
-            }
+            // UUID
+            out.writeInt(Math.min(this.UUID.length(), this.UUID_LENGTH));
+            this.writeFixedString(out, this.UUID, this.UUID_LENGTH);
 
             return baos.toByteArray();
 
@@ -118,16 +106,28 @@ public class Osoba implements IRecord<Osoba> {
             throw new RuntimeException("Error serializing Osoba", e);
         }
     }
+    private void writeFixedString(DataOutputStream out, String value, int maxLen) throws IOException {
+        for (int i = 0; i < maxLen; i++) {
+            char c = (i < value.length()) ? value.charAt(i) : 0;
+            out.writeChar(c);
+        }
+    }
+
+    private String readFixedString(DataInputStream in, int maxLen) throws IOException {
+        char[] chars = new char[maxLen];
+        for (int i = 0; i < maxLen; i++) {
+            chars[i] = in.readChar();
+        }
+        return new String(chars).replace("\u0000", "");
+    }
 
     @Override
     public int getSize() {
-        return Character.BYTES * 15 + Character.BYTES * 14 + Long.BYTES + Character.BYTES * 10;
+        return Integer.BYTES * 3 + (Character.BYTES * (this.MAX_MENO_LENGTH + this.MAX_PRIEZVISKO_LENGTH + this.UUID_LENGTH)) + Long.BYTES;
     }
 
     @Override
     public String toString() {
-        return new String(meno).trim() + " " +
-                new String(priezvisko).trim() + " [" +
-                new String(UUID).trim() + "]";
+        return this.meno + " " + this.priezvisko + " " + this.datumNarodenia + " " + this.UUID;
     }
 }

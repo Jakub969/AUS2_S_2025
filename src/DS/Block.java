@@ -112,18 +112,17 @@ public class Block<T extends IRecord<T>> implements IByteOperation<T> {
         return null;
     }
 
-    public boolean addRecord(T record) {
+    public void addRecord(T record) {
         if (this.validCount >= this.blockFactor) {
-            return false;
+            return;
         }
         for (int i = 0; i < this.blockFactor; i++) {
             if (this.records[i] == null) {
                 this.records[i] = record;
                 this.validCount++;
-                return true;
+                return;
             }
         }
-        return false;
     }
 
     public T removeRecord(T record) {
@@ -142,7 +141,7 @@ public class Block<T extends IRecord<T>> implements IByteOperation<T> {
         for (int i = 0; i < this.blockFactor; i++) {
             IRecord<T> currentRecord = this.records[i];
             if (currentRecord != null) {
-                System.out.println(currentRecord.toString());
+                System.out.println(currentRecord);
             }
         }
     }
@@ -156,18 +155,18 @@ public class Block<T extends IRecord<T>> implements IByteOperation<T> {
     }
 
     public int getNextBlockIndex() {
-        return nextBlockIndex;
+        return this.nextBlockIndex;
     }
 
     public int getPreviousBlockIndex() {
-        return previousBlockIndex;
+        return this.previousBlockIndex;
     }
 
     public int getValidCount() {
-        return validCount;
+        return this.validCount;
     }
 
     public int getBlockFactor() {
-        return blockFactor;
+        return this.blockFactor;
     }
 }

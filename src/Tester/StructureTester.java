@@ -21,18 +21,18 @@ public class StructureTester<T extends IRecord<T>> {
     // ===== Basic operations =====
 
     public void insertRecord(T record) {
-        int blockIndex = heapFile.insertRecord(record);
-        while (expectedBlocks.size() <= blockIndex) {
-            expectedBlocks.add(new ArrayList<>());
+        int blockIndex = this.heapFile.insertRecord(record);
+        while (this.expectedBlocks.size() <= blockIndex) {
+            this.expectedBlocks.add(new ArrayList<>());
         }
-        expectedBlocks.get(blockIndex).add(record);
+        this.expectedBlocks.get(blockIndex).add(record);
     }
 
     public void removeRecord(T record) {
-        boolean removedFromHeap = heapFile.deleteRecord(record);
+        boolean removedFromHeap = this.heapFile.deleteRecord(record);
         boolean removedFromExpected = false;
 
-        for (List<IRecord<T>> blockList : expectedBlocks) {
+        for (List<IRecord<T>> blockList : this.expectedBlocks) {
             if (blockList.removeIf(r -> r.isEqual(record))) {
                 removedFromExpected = true;
                 break;
@@ -45,8 +45,8 @@ public class StructureTester<T extends IRecord<T>> {
     }
 
     public void findRecord(T record) {
-        T heapFound = heapFile.findRecord(record);
-        boolean expectedFound = expectedBlocks.stream()
+        T heapFound = this.heapFile.findRecord(record);
+        boolean expectedFound = this.expectedBlocks.stream()
                 .flatMap(List::stream)
                 .anyMatch(r -> r.isEqual(record));
 
@@ -61,28 +61,29 @@ public class StructureTester<T extends IRecord<T>> {
 
     @SuppressWarnings("unchecked")
     public T generateRandomRecord() {
-        if (!heapFile.getRecordClass().equals(Osoba.class)) {
+        if (!this.heapFile.getRecordClass().equals(Osoba.class)) {
             throw new IllegalStateException("Random generation currently supports only Osoba class.");
         }
 
-        int menoLen = 5 + random.nextInt(5);
-        int priezLen = 5 + random.nextInt(7);
+        int menoLen = 5 + this.random.nextInt(11);
+        int priezLen = 5 + this.random.nextInt(10);
         int uuidLen = 10;
 
-        char[] meno = randomChars(menoLen);
-        char[] priezvisko = randomChars(priezLen);
+        String meno = this.randomString(menoLen);
+        String priezvisko = this.randomString(priezLen);
         Date datum = new Date(ThreadLocalRandom.current().nextLong(0, System.currentTimeMillis()));
-        char[] uuid = randomChars(uuidLen);
+        String uuid = this.randomString(uuidLen);
 
         return (T) new Osoba(meno, priezvisko, datum, uuid);
     }
 
-    private char[] randomChars(int len) {
-        char[] arr = new char[len];
-        for (int i = 0; i < len; i++) {
-            arr[i] = (char) ('A' + random.nextInt(26));
+    private String randomString(int length) {
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            char c = (char) ('A' + this.random.nextInt(26));
+            sb.append(c);
         }
-        return arr;
+        return sb.toString();
     }
 
     // ===== Random operation testing =====
@@ -91,30 +92,30 @@ public class StructureTester<T extends IRecord<T>> {
         List<T> insertedRecords = new ArrayList<>();
 
         for (int i = 0; i < operationsCount; i++) {
-            int choice = random.nextInt(3); // 0=insert, 1=delete, 2=find
+            int choice = this.random.nextInt(3); // 0=insert, 1=delete, 2=find
 
             switch (choice) {
                 case 0 -> { // insert
-                    T newRecord = generateRandomRecord();
-                    insertRecord(newRecord);
+                    T newRecord = this.generateRandomRecord();
+                    this.insertRecord(newRecord);
                     insertedRecords.add(newRecord);
-                    System.out.println("[INSERT] " + recordSummary(newRecord));
+                    System.out.println("[INSERT] " + this.recordSummary(newRecord));
                 }
 
                 case 1 -> { // delete
                     if (!insertedRecords.isEmpty()) {
-                        T toDelete = insertedRecords.get(random.nextInt(insertedRecords.size()));
-                        removeRecord(toDelete);
+                        T toDelete = insertedRecords.get(this.random.nextInt(insertedRecords.size()));
+                        this.removeRecord(toDelete);
                         insertedRecords.removeIf(r -> r.isEqual(toDelete));
-                        System.out.println("[DELETE] " + recordSummary(toDelete));
+                        System.out.println("[DELETE] " + this.recordSummary(toDelete));
                     }
                 }
 
                 case 2 -> { // find
                     if (!insertedRecords.isEmpty()) {
-                        T toFind = insertedRecords.get(random.nextInt(insertedRecords.size()));
-                        findRecord(toFind);
-                        System.out.println("[FIND] " + recordSummary(toFind));
+                        T toFind = insertedRecords.get(this.random.nextInt(insertedRecords.size()));
+                        this.findRecord(toFind);
+                        System.out.println("[FIND] " + this.recordSummary(toFind));
                     }
                 }
             }
@@ -123,9 +124,9 @@ public class StructureTester<T extends IRecord<T>> {
 
     private String recordSummary(T record) {
         if (record instanceof Osoba o) {
-            return new String(o.getMeno()) + " " +
-                    new String(o.getPriezvisko()) + " (" +
-                    new String(o.getUUID()) + ")";
+            return o.getMeno() + " " +
+                    o.getPriezvisko() + " (" +
+                    o.getUUID() + ")";
         }
         return record.toString();
     }
@@ -133,17 +134,17 @@ public class StructureTester<T extends IRecord<T>> {
     // ===== Utility methods =====
 
     public void printHeap() {
-        int totalBlocks = expectedBlocks.size();
+        int totalBlocks = this.expectedBlocks.size();
         for (int i = 0; i < totalBlocks; i++) {
             System.out.println("Block " + i + ":");
-            Block<T> block = heapFile.getBlock(i);
+            Block<T> block = this.heapFile.getBlock(i);
             block.printRecords();
         }
     }
 
     public void printExpected() {
-        for (int i = 0; i < expectedBlocks.size(); i++) {
-            System.out.println("Expected Block " + i + ": " + expectedBlocks.get(i));
+        for (int i = 0; i < this.expectedBlocks.size(); i++) {
+            System.out.println("Expected Block " + i + ": " + this.expectedBlocks.get(i));
         }
     }
 }
