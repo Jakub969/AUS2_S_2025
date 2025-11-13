@@ -21,7 +21,7 @@ public class StructureTester<T extends IRecord<T>> {
     private final HeapFile<T> heapFile;
     private final List<List<IRecord<T>>> expectedBlocks;
     private final Random random;
-    private final List<IndexedRecord<T>> inserted;   // tracks block index of each record
+    private final List<IndexedRecord<T>> inserted;
 
     public StructureTester(HeapFile<T> heapFile, long seed) {
         this.heapFile = heapFile;
@@ -33,17 +33,16 @@ public class StructureTester<T extends IRecord<T>> {
     }
 
     private void loadExistingHeapState() {
-        int totalBlocks = this.heapFile.getTotalBlocks(); // you MUST add getter to HeapFile
+        int totalBlocks = this.heapFile.getTotalBlocks();
 
         for (int i = 0; i < totalBlocks; i++) {
             Block<T> block = this.heapFile.getBlock(i);
             List<IRecord<T>> list = new ArrayList<>();
 
             for (int j = 0; j < block.getValidCount(); j++) {
-                IRecord<T> rec = block.getRecordAt(j);  // You must add getRecordAt()
+                IRecord<T> rec = block.getRecordAt(j);
                 list.add(rec);
 
-                // Track in inserted list
                 this.inserted.add(new IndexedRecord<>(i, (T) rec));
             }
 
@@ -51,12 +50,9 @@ public class StructureTester<T extends IRecord<T>> {
         }
     }
 
-    // ========= INSERT =========
-
     public void insertRecord(T record) {
         int blockIndex = this.heapFile.insertRecord(record);
 
-        // Expand expectedBlocks if needed
         while (this.expectedBlocks.size() <= blockIndex) {
             this.expectedBlocks.add(new ArrayList<>());
         }
@@ -64,8 +60,6 @@ public class StructureTester<T extends IRecord<T>> {
         this.expectedBlocks.get(blockIndex).add(record);
         this.inserted.add(new IndexedRecord<>(blockIndex, record));
     }
-
-    // ========= DELETE =========
 
     public void removeRecord(IndexedRecord<T> entry) {
         boolean removedHeap = this.heapFile.deleteRecord(entry.blockIndex, entry.record);
@@ -78,11 +72,8 @@ public class StructureTester<T extends IRecord<T>> {
             throw new IllegalStateException("Delete mismatch: heap vs expected");
         }
 
-        // If last block became empty and was trimmed, shrink expectedBlocks too
         this.trimExpectedBlocks();
     }
-
-    // ========= FIND =========
 
     public void findRecord(IndexedRecord<T> entry) {
         T fromHeap = this.heapFile.findRecord(entry.blockIndex, entry.record);
@@ -99,7 +90,6 @@ public class StructureTester<T extends IRecord<T>> {
         }
     }
 
-    // ========= RANDOM RECORD GENERATION =========
     public T generateRandomRecord() {
         if (!this.heapFile.getRecordClass().equals(Osoba.class)) {
             throw new IllegalStateException("This tester only supports Osoba");
@@ -120,8 +110,6 @@ public class StructureTester<T extends IRecord<T>> {
         }
         return new String(c);
     }
-
-    // ========= RANDOM OPERATION DRIVER =========
 
     public void performRandomOperations(int count) {
         for (int i = 0; i < count; i++) {
@@ -156,8 +144,6 @@ public class StructureTester<T extends IRecord<T>> {
             this.printExpected();
         }
     }
-
-    // ========= INTERNAL HELPERS =========
 
     private void trimExpectedBlocks() {
         while (!this.expectedBlocks.isEmpty() &&

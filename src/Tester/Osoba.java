@@ -4,6 +4,7 @@ import Interface.IRecord;
 
 import java.io.*;
 import java.util.Date;
+import java.util.Random;
 
 public class Osoba implements IRecord<Osoba> {
     private String meno;
@@ -129,5 +130,25 @@ public class Osoba implements IRecord<Osoba> {
     @Override
     public String toString() {
         return this.meno + " " + this.priezvisko + " " + this.datumNarodenia + " " + this.UUID;
+    }
+
+    public static Osoba fromUUID(String uuid) {
+        return new Osoba("", "", new Date(0), uuid);
+    }
+
+    public static Osoba generateRandom() {
+        Random r = new Random();
+        String meno = randomString(5 + r.nextInt(10));
+        String priez = randomString(5 + r.nextInt(10));
+        String uuid = randomString(10);
+        Date d = new Date(Math.abs(r.nextLong()) % System.currentTimeMillis());
+        return new Osoba(meno, priez, d, uuid);
+    }
+
+    private static String randomString(int len) {
+        Random r = new Random();
+        StringBuilder sb = new StringBuilder(len);
+        for (int i = 0; i < len; i++) sb.append( (char)('A' + r.nextInt(26)) );
+        return sb.toString();
     }
 }

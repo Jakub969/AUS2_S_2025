@@ -40,8 +40,6 @@ public class HeapFile<T extends IRecord<T>> {
         }
     }
 
-    // ========= CORE OPERATIONS ===========
-
     public int insertRecord(T record) {
         int blockIndex;
 
@@ -62,7 +60,6 @@ public class HeapFile<T extends IRecord<T>> {
 
         block.addRecord(record);
 
-        // update lists
         this.updateListsAfterInsert(blockIndex, block);
 
         this.writeBlockToFile(block, blockIndex);
@@ -91,7 +88,6 @@ public class HeapFile<T extends IRecord<T>> {
         this.updateListsAfterDelete(index, block);
         this.writeBlockToFile(block, index);
 
-        // Trim empty blocks only if the deleted one is last or if trailing empty exist
         this.trimTrailingEmptyBlocks();
 
         this.saveLists();
@@ -109,9 +105,6 @@ public class HeapFile<T extends IRecord<T>> {
         Block<T> block = this.getBlock(index);
         return block.getCopyOfRecord(record);
     }
-
-
-    // ========= LIST MANAGEMENT ===========
 
     private void updateListsAfterInsert(int index, Block<T> block) {
         if (block.getValidCount() == block.getBlockFactor()) {
@@ -138,14 +131,11 @@ public class HeapFile<T extends IRecord<T>> {
     }
 
     private void trimTrailingEmptyBlocks() {
-        // repeatedly remove last block(s) if they are empty
         while (this.totalBlocks > 0 && this.emptyBlocks.contains(this.totalBlocks - 1)) {
             this.truncateLastBlock();
-            this.emptyBlocks.remove(Integer.valueOf(this.totalBlocks)); // adjust list
+            this.emptyBlocks.remove(Integer.valueOf(this.totalBlocks));
         }
     }
-
-    // ========= FILE I/O ===========
 
     private void writeBlockToFile(Block<T> block, int blockIndex) {
         byte[] blockData = block.toByteArray();
@@ -233,8 +223,6 @@ public class HeapFile<T extends IRecord<T>> {
             throw new RuntimeException("Error loading list file: " + file.getName(), e);
         }
     }
-
-    // ========= ACCESSORS ===========
 
     public int getTotalBlocks() { return this.totalBlocks; }
     public int getTotalRecords() { return this.totalRecords; }
