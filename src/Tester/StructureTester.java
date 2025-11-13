@@ -133,6 +133,8 @@ public class StructureTester<T extends IRecord<T>> {
                     }
                 }
             }
+            this.printHeap();
+            this.printExpected();
         }
     }
 
@@ -149,6 +151,7 @@ public class StructureTester<T extends IRecord<T>> {
         for (int i = 0; i < this.expectedBlocks.size(); i++) {
             System.out.println("Block " + i + ":");
             Block<T> block = this.heapFile.getBlock(i);
+            System.out.println("Valid records: " + block.getValidCount());
             block.printRecords();
         }
     }
