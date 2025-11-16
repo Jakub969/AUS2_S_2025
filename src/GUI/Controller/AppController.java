@@ -30,18 +30,12 @@ public class AppController {
         return this.heapFile.findRecord(index, dummy);
     }
 
-    public List<List<Osoba>> loadBlocks() {
+    public List<Block<Osoba>> loadBlocks() {
         int total = this.heapFile.getTotalBlocks();
-        List<List<Osoba>> list = new ArrayList<>();
+        List<Block<Osoba>> list = new ArrayList<>();
 
         for (int i = 0; i < total; i++) {
-            Block<Osoba> block = this.heapFile.getBlock(i);
-            List<Osoba> records = new ArrayList<>();
-
-            for (int j = 0; j < block.getValidCount(); j++) {
-                records.add(block.getRecordAt(j).createCopy());
-            }
-            list.add(records);
+            list.add(this.heapFile.getBlock(i));
         }
         return list;
     }

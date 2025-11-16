@@ -1,5 +1,6 @@
 package GUI.View;
 
+import DS.Block;
 import Tester.Osoba;
 
 import javax.swing.*;
@@ -12,23 +13,38 @@ public class BlockView extends JPanel {
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     }
 
-    public void updateBlocks(List<List<Osoba>> blocks) {
+    public void updateBlocks(List<Block<Osoba>> blocks) {
+
         this.removeAll();
+
         for (int i = 0; i < blocks.size(); i++) {
-            JPanel b = new JPanel();
-            b.setLayout(new BorderLayout());
-            b.setBorder(BorderFactory.createTitledBorder("Block " + i));
+            Block<Osoba> block = blocks.get(i);
 
-            JTextArea area = new JTextArea();
-            area.setEditable(false);
+            JPanel blockPanel = new JPanel(new BorderLayout());
+            blockPanel.setBorder(BorderFactory.createTitledBorder("Block " + i));
 
-            for (Osoba o : blocks.get(i)) {
-                area.append(o.toString() + "\n");
+            // ---------- Block Metadata ----------
+            StringBuilder header = new StringBuilder();
+            header.append("validCount: ").append(block.getValidCount()).append("\n");
+            header.append("nextBlockIndex: ").append(block.getNextBlockIndex()).append("\n");
+            header.append("previousBlockIndex: ").append(block.getPreviousBlockIndex()).append("\n\n");
+            header.append("Records:\n");
+
+            // ---------- Records ----------
+            for (int j = 0; j < block.getBlockFactor(); j++) {
+                var rec = block.getRecordAt(j);
+                if (rec != null) {
+                    header.append("[").append(j).append("] ").append(rec).append("\n");
+                }
             }
 
-            b.add(new JScrollPane(area), BorderLayout.CENTER);
-            this.add(b);
+            JTextArea textArea = new JTextArea(header.toString());
+            textArea.setEditable(false);
+
+            blockPanel.add(new JScrollPane(textArea), BorderLayout.CENTER);
+            this.add(blockPanel);
         }
+
         this.revalidate();
         this.repaint();
     }

@@ -63,7 +63,9 @@ public class HeapFile<T extends IRecord<T>> {
         this.updateListsAfterInsert(blockIndex, block);
 
         this.writeBlockToFile(block, blockIndex);
-        if (blockIndex == this.totalBlocks) this.totalBlocks++;
+        if (blockIndex == this.totalBlocks) {
+            this.totalBlocks++;
+        }
         this.totalRecords++;
 
         this.saveLists();
