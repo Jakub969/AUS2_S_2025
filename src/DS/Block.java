@@ -11,8 +11,6 @@ public class Block<T extends IRecord<T>> implements IByteOperation<T> {
     private int validCount;
     private final IRecord<T>[] records;
     private final int blockFactor;
-    private int nextBlockIndex;
-    private int previousBlockIndex;
     private final Class<T> recordType;
     private final int recordSize;
     private final int blockSize;
@@ -21,18 +19,15 @@ public class Block<T extends IRecord<T>> implements IByteOperation<T> {
         this.recordType = recordType;
         this.recordSize = this.getSizeOfRecord();
         this.blockSize = sizeOfBlock;
-        int actualSizeOfBlock = this.blockSize - (3 * Integer.BYTES);
+        int actualSizeOfBlock = this.blockSize - Integer.BYTES;
         this.blockFactor = actualSizeOfBlock / this.recordSize;
         this.records = new IRecord[this.blockFactor];
-        this.nextBlockIndex = -1;
-        this.previousBlockIndex = -1;
         this.validCount = 0;
     }
 
     private int getSizeOfRecord() {
         try {
-            T instance = this.recordType.getDeclaredConstructor().newInstance();
-            return instance.getSize();
+            return this.recordType.getDeclaredConstructor().newInstance().getSize();
         } catch (InstantiationException e) {
             throw new IllegalStateException("Cannot instantiate record type", e);
         } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
@@ -47,8 +42,6 @@ public class Block<T extends IRecord<T>> implements IByteOperation<T> {
         DataInputStream hlpInStream = new DataInputStream(hlpByteArrayInputStream);
         try {
             this.validCount = hlpInStream.readInt();
-            this.nextBlockIndex = hlpInStream.readInt();
-            this.previousBlockIndex = hlpInStream.readInt();
             for (int i = 0; i < this.blockFactor; i++) {
                 byte[] recordBytes = new byte[this.recordSize];
                 hlpInStream.read(recordBytes);
@@ -69,8 +62,6 @@ public class Block<T extends IRecord<T>> implements IByteOperation<T> {
     private void clearBlock() {
         Arrays.fill(this.records, null);
         this.validCount = 0;
-        this.nextBlockIndex = -1;
-        this.previousBlockIndex = -1;
     }
 
     @Override
@@ -79,8 +70,6 @@ public class Block<T extends IRecord<T>> implements IByteOperation<T> {
         DataOutputStream hlpOutStream = new DataOutputStream(hlpByteArrayOutputStream);
         try {
             hlpOutStream.writeInt(this.validCount);
-            hlpOutStream.writeInt(this.nextBlockIndex);
-            hlpOutStream.writeInt(this.previousBlockIndex);
             for (int i = 0; i < this.blockFactor; i++) {
                 if (this.records[i] != null) {
                     hlpOutStream.write(this.records[i].toByteArray());
@@ -163,22 +152,6 @@ public class Block<T extends IRecord<T>> implements IByteOperation<T> {
                 System.out.println(currentRecord);
             }
         }
-    }
-
-    public void setNextBlockIndex(int nextBlockIndex) {
-        this.nextBlockIndex = nextBlockIndex;
-    }
-
-    public void setPreviousBlockIndex(int previousBlockIndex) {
-        this.previousBlockIndex = previousBlockIndex;
-    }
-
-    public int getNextBlockIndex() {
-        return this.nextBlockIndex;
-    }
-
-    public int getPreviousBlockIndex() {
-        return this.previousBlockIndex;
     }
 
     public int getValidCount() {

@@ -26,8 +26,6 @@ public class BlockView extends JPanel {
             // ---------- Block Metadata ----------
             StringBuilder header = new StringBuilder();
             header.append("validCount: ").append(block.getValidCount()).append("\n");
-            header.append("nextBlockIndex: ").append(block.getNextBlockIndex()).append("\n");
-            header.append("previousBlockIndex: ").append(block.getPreviousBlockIndex()).append("\n\n");
             header.append("Records:\n");
 
             // ---------- Records ----------
