@@ -122,27 +122,19 @@ public class Block<T extends IRecord<T>> implements IByteOperation<T> {
             IRecord<T> currentRecord = this.records[i];
             if (currentRecord != null && currentRecord.isEqual(record)) {
                 T copy = currentRecord.createCopy();
-                this.records[i] = null;
                 this.validCount--;
-                this.compact();
+                this.compact(i, copy);
                 return copy;
             }
         }
         return null;
     }
 
-    private void compact() {
-        int writePos = 0;
-
-        for (int readPos = 0; readPos < this.blockFactor; readPos++) {
-            if (this.records[readPos] != null) {
-                if (writePos != readPos) {
-                    this.records[writePos] = this.records[readPos];
-                    this.records[readPos] = null;
-                }
-                writePos++;
-            }
+    private void compact(int removedIndex, T recordCopy) {
+        for (int i = removedIndex; i < this.validCount; i++) {
+            this.records[i] = this.records[i + 1];
         }
+        this.records[this.validCount] = recordCopy;
     }
 
     public void printRecords() {

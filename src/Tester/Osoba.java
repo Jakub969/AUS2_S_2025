@@ -138,8 +138,8 @@ public class Osoba implements IRecord<Osoba> {
 
     public static Osoba generateRandom() {
         Random r = new Random();
-        String meno = randomString(5 + r.nextInt(10));
-        String priez = randomString(5 + r.nextInt(10));
+        String meno = randomName();
+        String priez = randomSurname();
         String uuid = randomString(10);
         Date d = new Date(Math.abs(r.nextLong()) % System.currentTimeMillis());
         return new Osoba(meno, priez, d, uuid);
@@ -150,5 +150,17 @@ public class Osoba implements IRecord<Osoba> {
         StringBuilder sb = new StringBuilder(len);
         for (int i = 0; i < len; i++) sb.append( (char)('A' + r.nextInt(26)) );
         return sb.toString();
+    }
+
+    private static String randomName() {
+        Random r = new Random();
+        String[] names = new String[]{"Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Hank", "Ivy", "Jack"};
+        return names[r.nextInt(names.length)];
+    }
+
+    private static String randomSurname() {
+        Random r = new Random();
+        String[] surnames = new String[]{"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"};
+        return surnames[r.nextInt(surnames.length)];
     }
 }

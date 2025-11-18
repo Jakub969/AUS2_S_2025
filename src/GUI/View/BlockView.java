@@ -31,9 +31,7 @@ public class BlockView extends JPanel {
             // ---------- Records ----------
             for (int j = 0; j < block.getBlockFactor(); j++) {
                 var rec = block.getRecordAt(j);
-                if (rec != null) {
-                    header.append("[").append(j).append("] ").append(rec).append("\n");
-                }
+                header.append("[").append(j).append("] ").append(rec).append("\n");
             }
 
             JTextArea textArea = new JTextArea(header.toString());
